@@ -850,21 +850,31 @@ class InputHandler {
 // ============================================================================
 function init() {
         console.log("Game init called");
-    gameState.sectorMap = new SectorMap();
-    gameState.player = new Player();
-    gameState.ui = new UI();
-    gameState.input = new InputHandler();
-    gameState.dialogue = null;
-    gameState.combat = null;
-    gameState.currentState = CONFIG.STATE.BOOT;
-    gameState.lastTime = performance.now();
-    // After a short delay, transition to sector map
-    setTimeout(() => {
-        if (gameState.currentState === CONFIG.STATE.BOOT) {
-            gameState.currentState = CONFIG.STATE.SECTOR_MAP;
-        }
-    }, 100);
-    requestAnimationFrame(gameLoop);
+    try {
+        gameState.sectorMap = new SectorMap();
+        gameState.player = new Player();
+        gameState.ui = new UI();
+        gameState.input = new InputHandler();
+        gameState.dialogue = null;
+        gameState.combat = null;
+        gameState.currentState = CONFIG.STATE.BOOT;
+        gameState.lastTime = performance.now();
+        console.log("Game objects created, setting timeout to switch to SECTOR_MAP");
+        // After a short delay, transition to sector map
+        setTimeout(() => {
+            console.log("Timeout fired, switching to SECTOR_MAP");
+            if (gameState.currentState === CONFIG.STATE.BOOT) {
+                gameState.currentState = CONFIG.STATE.SECTOR_MAP;
+                console.log("Switched to SECTOR_MAP");
+            }
+        }, 100);
+        console.log("Starting game loop");
+        requestAnimationFrame(gameLoop);
+    } catch (e) {
+        console.error("Error in init:", e);
+        // Show error on screen
+        document.getElementById('loading-text').textContent = "Error: " + e.message;
+    }
 }
 
 function gameLoop(timestamp) {
