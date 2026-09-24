@@ -856,8 +856,14 @@ function init() {
     gameState.input = new InputHandler();
     gameState.dialogue = null;
     gameState.combat = null;
-    gameState.currentState = CONFIG.STATE.SECTOR_MAP;
+    gameState.currentState = CONFIG.STATE.BOOT;
     gameState.lastTime = performance.now();
+    // After a short delay, transition to sector map
+    setTimeout(() => {
+        if (gameState.currentState === CONFIG.STATE.BOOT) {
+            gameState.currentState = CONFIG.STATE.SECTOR_MAP;
+        }
+    }, 100);
     requestAnimationFrame(gameLoop);
 }
 
@@ -965,6 +971,16 @@ function gameLoop(timestamp) {
     // Render
     ctx.clearRect(0, 0, CONFIG.LOGICAL_WIDTH, CONFIG.LOGICAL_HEIGHT);
     switch (gameState.currentState) {
+        case CONFIG.STATE.BOOT:
+            // Draw a simple loading screen
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, CONFIG.LOGICAL_WIDTH, CONFIG.LOGICAL_HEIGHT);
+            ctx.fillStyle = '#0f0';
+            ctx.font = '16px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('Green Lantern: Ultima Odyssey', CONFIG.LOGICAL_WIDTH / 2, CONFIG.LOGICAL_HEIGHT / 2 - 10);
+            ctx.fillText('Loading...', CONFIG.LOGICAL_WIDTH / 2, CONFIG.LOGICAL_HEIGHT / 2 + 10);
+            break;
         case CONFIG.STATE.SECTOR_MAP:
             gameState.sectorMap.render();
             break;
