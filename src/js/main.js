@@ -22,7 +22,15 @@ const CONFIG = {
     // Willpower regen per second (points per second)
     WILLPOWER_REGEN: 5,
     // Tile size for planet surface
-    TILE_SIZE: 16
+    TILE_SIZE: 16,
+    // Construct definitions
+    CONSTRUCTS: [
+        { name: 'Fist', cost: 5, damage: 10, description: 'A simple energy fist.' },
+        { name: 'Shield', cost: 10, damage: 0, description: 'Protectorial barrier. Reduces incoming damage.' }, // We'll implement effect later
+        { name: 'Sword', cost: 15, damage: 20, description: 'Energy blade.' },
+        { name: 'Grenade', cost: 20, damage: 30, description: 'Explosive projectile.' },
+        { name: 'Cage', cost: 25, damage: 0, description: 'Traps the enemy. Prevents action for one turn.' } // We'll implement effect later
+    ]
 };
 
 // Canvas setup
@@ -38,6 +46,7 @@ let gameState = {
     sectorMap: null,
     planetSurface: null,
     dialogue: null,
+    combat: null,
     player: null,
     ui: null,
     input: null,
@@ -110,6 +119,10 @@ class Player {
         this.health = this.maxHealth;
         this.direction = 0; // 0: up, 1: right, 2: down, 3: left
         this.moving = false;
+        // Inventory placeholder
+        this.inventory = [];
+        // Equipped construct index (for quick select)
+        this.equippedConstruct = 0; // index into CONFIG.CONSTRUCTS
     }
     
     update(deltaTime) {
@@ -161,6 +174,22 @@ class Player {
         }
         return false;
     }
+    
+    // Check if player has enough willpower for a construct
+    canUseConstruct(constructIndex) {
+        const construct = CONFIG.CONSTRUCTS[constructIndex];
+        return this.willpower >= construct.cost;
+    }
+    
+    // Use a construct, deduct willpower
+    useConstruct(constructIndex) {
+        const construct = CONFIG.CONSTRUCTS[constructIndex];
+        if (this.willpower >= construct.cost) {
+            this.willpower -= construct.cost;
+            return construct;
+        }
+        return null;
+    }
 }
 
 // ============================================================================
@@ -196,11 +225,19 @@ class PlanetSurface {
                      "Be cautious."],
                     [{ text: "Thank you for the warning.", action: () => {} }])
         ];
+        // Place some enemies (Fear Parasites) - more in the north (higher y? actually north is up, so lower y)
+        // We'll place a few enemies at specific locations for now
+        this.enemies = [
+            new FearParasite(this.width * CONFIG.TILE_SIZE / 2 - 40, this.height * CONFIG.TILE_SIZE / 2 - 50),
+            new FearParasite(this.width * CONFIG.TILE_SIZE / 2 + 60, this.height * CONFIG.TILE_SIZE / 2 + 30)
+        ];
     }
     
     update(deltaTime) {
         // Update NPCs if needed
         this.npcs.forEach(npc => npc.update(deltaTime));
+        // Update enemies
+        this.enemies.forEach(enemy => enemy.update(deltaTime));
     }
     
     render() {
@@ -215,6 +252,9 @@ class PlanetSurface {
                              CONFIG.TILE_SIZE, CONFIG.TILE_SIZE);
             }
         }
+        
+        // Draw enemies
+        this.enemies.forEach(enemy => enemy.render());
         
         // Draw NPCs
         this.npcs.forEach(npc => npc.render());
@@ -236,11 +276,22 @@ class PlanetSurface {
         const targetX = touchX;
         const targetY = touchY;
         
+        // Check if tapping near an enemy to start combat
+        for (const enemy of this.enemies) {
+            if (!enemy.isDefeated()) {
+                const dist = Math.hypot(targetX - enemy.x, targetY - enemy.y);
+                if (dist < 20) { // interaction radius
+                    // Start combat with this enemy
+                    return { action: 'startCombat', enemy: enemy };
+                }
+            }
+        }
+        
         // Check if tapping near an NPC to start dialogue
         for (const npc of this.npcs) {
             const dist = Math.hypot(targetX - npc.x, targetY - npc.y);
             if (dist < 20) { // interaction radius
-                // Return an object to start dialogue with this NPC
+                // Start dialogue with this NPC
                 return { action: 'startDialogue', npc: npc };
             }
         }
@@ -261,7 +312,7 @@ class PlanetSurface {
             else if (moveY < 0) player.direction = 0;
             else if (moveY > 0) player.direction = 2;
         }
-        return null; // no dialogue started
+        return null; // no dialogue or combat started
     }
 }
 
@@ -418,6 +469,196 @@ class Dialogue {
 }
 
 // ============================================================================
+// ENEMY: Fear Parasite
+// ============================================================================
+class FearParasite {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.maxHealth = 30;
+        this.health = this.maxHealth;
+        this.attackDamage = 5;
+        this.attackCooldown = 0; // ticks until next attack
+        this.attackCooldownMax = 60; // 1 second at 60 FPS
+        this.isDefeatedFlag = false;
+        this.direction = 0; // 0: up, 1: right, 2: down, 3: left (for visual)
+        // Weakness: weak to Hope constructs (we'll implement later)
+    }
+    
+    update(deltaTime) {
+        // Update attack cooldown
+        if (this.attackCooldown > 0) {
+            this.attackCooldown -= (deltaTime / 1000) * 60; // assume 60 FPS, convert ms to seconds then multiply by 60 to get ticks
+            if (this.attackCooldown < 0) this.attackCooldown = 0;
+        }
+        // Simple AI: if player is close and cooldown is zero, attack
+        // We'll need access to player; we'll handle this in combat state instead
+        // For now, we'll just do nothing in update; combat state will manage turns
+    }
+    
+    render() {
+        // Draw enemy as a red circle (fear)
+        ctx.fillStyle = '#f00';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw a minus sign to indicate enemy
+        ctx.fillStyle = '#fff';
+        ctx.font = '10px monospace';
+        ctx.fillText('-', this.x - 3, this.y + 3);
+    }
+    
+    isDefeated() {
+        return this.isDefeatedFlag || this.health <= 0;
+    }
+    
+    takeDamage(amount) {
+        this.health -= amount;
+        if (this.health <= 0) {
+            this.isDefeatedFlag = true;
+            this.health = 0;
+        }
+    }
+    
+    // For simplicity, we'll let combat state handle attacking the player
+}
+
+// ============================================================================
+// COMBAT SYSTEM
+// ============================================================================
+class Combat {
+    constructor(player, enemy) {
+        this.player = player;
+        this.enemy = enemy;
+        this.state = 'playerTurn'; // or 'enemyTurn', 'victory', 'defeat'
+        this.message = '';
+        this.selectedConstructIndex = 0; // index into CONFIG.CONSTRUCTS
+        this.constructNames = CONFIG.CONSTRUCTS.map(c => c.name);
+    }
+    
+    update() {
+        // No continuous update; we'll handle via input
+    }
+    
+    render() {
+        // Draw a semi-transparent background
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(0, 0, CONFIG.LOGICAL_WIDTH, CONFIG.LOGICAL_HEIGHT);
+        
+        // Draw player and enemy avatars (placeholders)
+        ctx.fillStyle = '#0f0';
+        ctx.fillRect(50, CONFIG.LOGICAL_HEIGHT / 2 - 20, 40, 40); // player
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(CONFIG.LOGICAL_WIDTH - 90, CONFIG.LOGICAL_HEIGHT / 2 - 20, 40, 40); // enemy
+        
+        // Draw health bars
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(50, CONFIG.LOGICAL_HEIGHT / 2 + 25, 40 * (this.player.health / this.player.maxHealth), 5);
+        ctx.fillStyle = '#0f0';
+        ctx.fillRect(CONFIG.LOGICAL_WIDTH - 90, CONFIG.LOGICAL_HEIGHT / 2 + 25, 40 * (this.enemy.health / this.enemy.maxHealth), 5);
+        
+        // Draw labels
+        ctx.fillStyle = '#fff';
+        ctx.font = '14px monospace';
+        ctx.fillText('Player', 50, CONFIG.LOGICAL_HEIGHT / 2 - 30);
+        ctx.fillText('Enemy', CONFIG.LOGICAL_WIDTH - 90, CONFIG.LOGICAL_HEIGHT / 2 - 30);
+        
+        // Draw message
+        ctx.fillStyle = '#ff0';
+        ctx.font = '16px monospace';
+        ctx.fillText(this.message, CONFIG.LOGICAL_WIDTH / 2 - ctx.measureText(this.message).width / 2, 50);
+        
+        // If player's turn, show construct selection
+        if (this.state === 'playerTurn') {
+            ctx.fillStyle = '#fff';
+            ctx.font = '14px monospace';
+            ctx.fillText('Select Construct:', 20, CONFIG.LOGICAL_HEIGHT - 80);
+            this.constructNames.forEach((name, i) => {
+                const construct = CONFIG.CONSTRUCTS[i];
+                const canUse = this.player.canUseConstruct(i);
+                if (i === this.selectedConstructIndex) {
+                    ctx.fillStyle = '#0f0'; // highlight selected
+                } else if (!canUse) {
+                    ctx.fillStyle = '#666'; // dim if not enough willpower
+                } else {
+                    ctx.fillStyle = '#fff';
+                }
+                ctx.fillText(`${name} (${construct.cost} WP)`, 20, CONFIG.LOGICAL_HEIGHT - 60 + i * 20);
+            });
+            ctx.fillStyle = '#fff';
+            ctx.fillText('WP: ' + Math.floor(this.player.willpower), 20, CONFIG.LOGICAL_HEIGHT - 20);
+        }
+    }
+    
+    // Handle input for combat
+    handleInput(action) {
+        if (this.state === 'playerTurn') {
+            if (action === 'confirm') {
+                // Use the selected construct
+                const construct = this.player.useConstruct(this.selectedConstructIndex);
+                if (construct) {
+                    // Apply construct effect
+                    this.message = `You used ${construct.name}!`;
+                    if (construct.damage > 0) {
+                        this.enemy.takeDamage(construct.damage);
+                        this.message += ` It dealt ${construct.damage} damage.`;
+                        if (this.enemy.isDefeated()) {
+                            this.state = 'victory';
+                            this.message = 'You have defeated the enemy!';
+                            return true; // combat ended
+                        }
+                    } else {
+                        // Implement effects for shield, cage, etc.
+                        // For now, just a placeholder
+                        this.message += ` (effect pending)`;
+                    }
+                    // After player action, enemy turns
+                    this.state = 'enemyTurn';
+                    // We'll process enemy turn after a short delay or immediately; we'll do it now for simplicity
+                    setTimeout(() => this.enemyTurn(), 500); // delay to show player action
+                    return false; // combat continues
+                } else {
+                    this.message = 'Not enough willpower!';
+                    return false;
+                }
+            } else if (action === 'up') {
+                this.selectedConstructIndex = (this.selectedConstructIndex - 1 + CONFIG.CONSTRUCTS.length) % CONFIG.CONSTRUCTS.length;
+                return false;
+            } else if (action === 'down') {
+                this.selectedConstructIndex = (this.selectedConstructIndex + 1) % CONFIG.CONSTRUCTS.length;
+                return false;
+            }
+        }
+        // For other states, we just wait for the enemy turn to finish or for victory/defeat to be handled in the game loop
+        return false;
+    }
+    
+    enemyTurn() {
+        if (this.enemy.isDefeated()) {
+            this.state = 'victory';
+            this.message = 'You have defeated the enemy!';
+            return;
+        }
+        // Enemy attacks if cooldown is ready
+        if (this.enemy.attackCooldown <= 0) {
+            this.player.health -= this.enemy.attackDamage;
+            this.enemy.attackCooldown = this.enemy.attackCooldownMax;
+            this.message = `The Fear Parasite attacks you for ${this.enemy.attackDamage} damage!`;
+            if (this.player.health <= 0) {
+                this.state = 'defeat';
+                this.message = 'You have been defeated...';
+                return;
+            }
+        } else {
+            this.message = 'The Fear Parasite prepares to attack...';
+        }
+        // After enemy turn, back to player
+        this.state = 'playerTurn';
+    }
+}
+
+// ============================================================================
 // UI
 // ============================================================================
 class UI {
@@ -524,7 +765,7 @@ class InputHandler {
         this.keyPrev = { ...this.keys };
     }
     
-    update(player, planetSurface, dialogue, gameState) {
+    update(player, planetSurface, dialogue, combat, gameState) {
         this.beginFrame();
         
         // Handle dialogue input
@@ -540,16 +781,38 @@ class InputHandler {
             }
         }
         
+        // Handle combat input
+        if (combat && combat.active) {
+            // We'll define an active property on combat; for now, we'll check if combat exists and state is playerTurn
+            if (combat.state === 'playerTurn') {
+                if (this.isJustPressed('Enter') || this.isJustPressed('Space')) {
+                    return combat.handleInput('confirm');
+                }
+                if (this.isJustPressed('ArrowUp')) {
+                    return combat.handleInput('up');
+                }
+                if (this.isJustPressed('ArrowDown')) {
+                    return combat.handleInput('down');
+                }
+            }
+        }
+        
         // Handle tap for movement/interaction (if we have a last tap)
         if (this.lastTapPos && !this.tapHandled) {
             this.tapHandled = true;
             const result = planetSurface.handleTouch(this.lastTapPos.x, this.lastTapPos.y, player);
-            if (result && result.action === 'startDialogue') {
-                // Start a new dialogue with the NPC
-                gameState.dialogue = new Dialogue(result.npc);
-                gameState.dialogue.start(result.npc);
-                gameState.currentState = CONFIG.STATE.DIALOGUE;
-                return true; // dialogue started
+            if (result) {
+                if (result.action === 'startDialogue') {
+                    dialogue.start(result.npc);
+                    gameState.dialogue = dialogue;
+                    gameState.currentState = CONFIG.STATE.DIALOGUE;
+                    return true; // dialogue started
+                } else if (result.action === 'startCombat') {
+                    combat = new Combat(player, result.enemy);
+                    gameState.combat = combat;
+                    gameState.currentState = CONFIG.STATE.COMBAT;
+                    return true; // combat started
+                }
             }
             // Otherwise, movement was handled in handleTouch
             return false;
@@ -591,6 +854,7 @@ function init() {
     gameState.ui = new UI();
     gameState.input = new InputHandler();
     gameState.dialogue = null;
+    gameState.combat = null;
     gameState.currentState = CONFIG.STATE.SECTOR_MAP;
     gameState.lastTime = performance.now();
     requestAnimationFrame(gameLoop);
@@ -608,10 +872,20 @@ function gameLoop(timestamp) {
         case CONFIG.STATE.PLANET_SURFACE:
             gameState.player.update(deltaTime);
             gameState.planetSurface.update(deltaTime);
-            // Check if dialogue should start from touch (handled in input)
+            // Check if dialogue or combat should start from touch (handled in input)
             break;
         case CONFIG.STATE.DIALOGUE:
             // Dialogue updates itself via input
+            break;
+        case CONFIG.STATE.COMBAT:
+            // Combat updates itself via input and enemy turn timing
+            if (gameState.combat) {
+                // If combat is over, we'll handle state transition below
+                if (gameState.combat.state === 'victory' || gameState.combat.state === 'defeat') {
+                    // Wait for a moment then return to planet surface
+                    // We'll handle this in the state transition section
+                }
+            }
             break;
         // Add other states as needed
     }
@@ -627,17 +901,57 @@ function gameLoop(timestamp) {
                 // Transition to planet surface
                 gameState.planetSurface = new PlanetSurface(planet.name);
                 gameState.currentState = CONFIG.STATE.PLANET_SURFACE;
-                // Reset dialogue
+                // Reset dialogue and combat
                 gameState.dialogue = null;
+                gameState.combat = null;
             }
         }
     } else if (gameState.currentState === CONFIG.STATE.PLANET_SURFACE) {
-        inputResult = gameState.input.update(gameState.player, gameState.planetSurface, gameState.dialogue, gameState);
-        // If inputResult indicates dialogue started, the state is already set to DIALOGUE in the input handler
-        // If dialogue ended, we need to return to planet surface
+        inputResult = gameState.input.update(gameState.player, gameState.planetSurface, gameState.dialogue, gameState.combat, gameState);
+        // If inputResult indicates dialogue started, we need to set the dialogue object and state
+        if (inputResult === true && gameState.dialogue === null) {
+            // This means the input handler started a dialogue but we haven't set the dialogue yet.
+            // Actually, in the input handler, when we get a 'startDialogue' result, we set gameState.dialogue and change state.
+            // We'll trust that the input handler has already set the dialogue and state.
+            // We'll do nothing here; the state should already be DIALOGUE.
+        }
+        // If inputResult indicates combat started, we need to set the combat object and state
+        if (inputResult === true && gameState.combat === null) {
+            // Similarly, the input handler should have set gameState.combat and state to COMBAT.
+        }
+        // If dialogue ended, return to planet surface
         if (gameState.dialogue && !gameState.dialogue.active) {
             gameState.dialogue = null;
             gameState.currentState = CONFIG.STATE.PLANET_SURFACE;
+        }
+        // If combat ended, return to planet surface
+        if (gameState.combat && (gameState.combat.state === 'victory' || gameState.combat.state === 'defeat')) {
+            // Wait a bit then return to planet surface; we'll do it after a short delay or on next frame
+            // For simplicity, we'll return immediately
+            gameState.combat = null;
+            gameState.currentState = CONFIG.STATE.PLANET_SURFACE;
+        }
+    } else if (gameState.currentState === CONFIG.STATE.DIALOGUE) {
+        // Handle dialogue input
+        if (gameState.dialogue) {
+            inputResult = gameState.input.update(gameState.player, gameState.planetSurface, gameState.dialogue, gameState.combat, gameState);
+            if (inputResult === true && !gameState.dialogue.active) {
+                gameState.dialogue = null;
+                gameState.currentState = CONFIG.STATE.PLANET_SURFACE;
+            }
+        }
+    } else if (gameState.currentState === CONFIG.STATE.COMBAT) {
+        // Handle combat input
+        if (gameState.combat) {
+            inputResult = gameState.input.update(gameState.player, gameState.planetSurface, gameState.dialogue, gameState.combat, gameState);
+            // The combat state updates itself via its own update? Actually, we handle input in the combat's handleInput method.
+            // We'll rely on the input handler to have processed the input and updated the combat state.
+            // Check if combat ended
+            if (gameState.combat.state === 'victory' || gameState.combat.state === 'defeat') {
+                // Return to planet surface
+                gameState.combat = null;
+                gameState.currentState = CONFIG.STATE.PLANET_SURFACE;
+            }
         }
     }
     
@@ -660,6 +974,16 @@ function gameLoop(timestamp) {
             }
             if (gameState.dialogue) {
                 gameState.dialogue.render();
+            }
+            break;
+        case CONFIG.STATE.COMBAT:
+            // Combat is rendered on top of planet surface (or we can draw a separate combat screen)
+            if (gameState.planetSurface) {
+                gameState.planetSurface.render();
+                gameState.player.render();
+            }
+            if (gameState.combat) {
+                gameState.combat.render();
             }
             break;
     }
