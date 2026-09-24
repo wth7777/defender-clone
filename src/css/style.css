@@ -11,7 +11,8 @@ html, body {
 
 canvas {
     display: block;
-    margin: 0 auto; /* Center canvas */
+    width: 100%;
+    height: 100%;
     /* Image rendering for pixel art */
     image-rendering: pixelated;
     image-rendering: crisp-edges;
