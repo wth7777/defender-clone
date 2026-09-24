@@ -2,6 +2,12 @@
 window.addEventListener('load', init);
 
 // Expose for debugging
+const DEBUG = {
+    showTouchCoords: true,
+    showBounds: true,
+    showCanvasInfo: true,
+    logTouchEvents: true
+};
 window.gameState = gameState;
 window.DEBUG = DEBUG;
 
