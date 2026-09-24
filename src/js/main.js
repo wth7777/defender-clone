@@ -864,7 +864,13 @@ function init() {
 function gameLoop(timestamp) {
     const deltaTime = timestamp - gameState.lastTime;
     gameState.lastTime = timestamp;
-    
+
+    // Debug: log state every 2 seconds
+    if (!gameState._lastLogTime || timestamp - gameState._lastLogTime > 2000) {
+        console.log("Game state:", gameState.currentState, "Timestamp:", timestamp);
+        gameState._lastLogTime = timestamp;
+    }
+
     // Update
     switch (gameState.currentState) {
         case CONFIG.STATE.SECTOR_MAP:

@@ -16,7 +16,6 @@ canvas {
     /* Image rendering for pixel art */
     image-rendering: pixelated;
     image-rendering: crisp-edges;
-    background-color: #111; /* For debugging: dark gray to see if canvas is visible */
 }
 
 /* Overlay for touch controls (if needed) */
