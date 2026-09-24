@@ -849,7 +849,7 @@ class InputHandler {
 // GAME INITIALIZATION AND LOOP
 // ============================================================================
 function init() {
-        console.log("Game init called");
+        alert("Game init called"); // DEBUG
     try {
         gameState.sectorMap = new SectorMap();
         gameState.player = new Player();
@@ -879,6 +879,7 @@ function init() {
         console.error("Error in init:", e);
         // Show error on screen
         document.getElementById('loading-text').textContent = "Error: " + e.message;
+        alert("Error in init: " + e.message); // DEBUG
     }
 }
 
