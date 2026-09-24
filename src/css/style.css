@@ -7,6 +7,7 @@ html, body {
     overflow: hidden;
     background: #000;
     touch-action: manipulation; /* Prevent double-tap zoom on mobile */
+    font-family: monospace;
 }
 
 canvas {
@@ -16,6 +17,34 @@ canvas {
     /* Image rendering for pixel art */
     image-rendering: pixelated;
     image-rendering: crisp-edges;
+    /* Position relative for debug overlay */
+    position: relative;
+    z-index: 1;
+}
+
+/* Debug overlay styling */
+#debug-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Let touches go through to canvas */
+    z-index: 2;
+    color: #0f0;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 10px;
+    box-sizing: border-box;
+    text-shadow: 0 0 2px #000;
+}
+
+#debug-info {
+    background: rgba(0,0,0,0.7);
+    padding: 10px;
+    border-radius: 5px;
+    max-height: 80%;
+    overflow-y: auto;
 }
 
 /* Overlay for touch controls (if needed) */
