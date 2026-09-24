@@ -8,6 +8,8 @@ html, body {
     background: #000;
     touch-action: manipulation; /* Prevent double-tap zoom on mobile */
     font-family: monospace;
+    /* Prevent overscroll on iOS */
+    overscroll-behavior: none;
 }
 
 canvas {
@@ -20,6 +22,8 @@ canvas {
     /* Position relative for debug overlay */
     position: relative;
     z-index: 1;
+    /* Ensure canvas takes full space */
+    touch-action: none;
 }
 
 /* Debug overlay styling */
@@ -37,6 +41,8 @@ canvas {
     padding: 10px;
     box-sizing: border-box;
     text-shadow: 0 0 2px #000;
+    /* Ensure it doesn't interfere with touches */
+    touch-action: none;
 }
 
 #debug-info {
@@ -45,6 +51,8 @@ canvas {
     border-radius: 5px;
     max-height: 80%;
     overflow-y: auto;
+    /* Ensure it doesn't block touches */
+    pointer-events: auto;
 }
 
 /* Overlay for touch controls (if needed) */
