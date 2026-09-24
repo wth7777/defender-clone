@@ -849,6 +849,7 @@ class InputHandler {
 // GAME INITIALIZATION AND LOOP
 // ============================================================================
 function init() {
+        console.log("Game init called");
     gameState.sectorMap = new SectorMap();
     gameState.player = new Player();
     gameState.ui = new UI();
