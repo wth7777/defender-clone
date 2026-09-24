@@ -93,12 +93,23 @@ A top-down 2D open-world RPG combining the open-world exploration and meaningful
 - [x] Basic UI frame (health, willpower, mini-map placeholder)
 - [x] Placeholder for interaction (tap on NPC to show dialogue box)
 
-## Phase 2 Goals
-- [ ] Implement dialogue system with choices
-- [ ] Add willpower resource and construct system
-- [ ] Create first planet (Earth) with a few NPCs and a simple quest
-- [ ] Integrate emotional spectrum effects
-- [ ] Polish mobile UI and touch controls
-- [ ] Prepare for deployment to GitHub Pages
+## Phase 2 Goals (Completed)
+- [x] Implement dialogue system with choices
+- [x] Add willpower resource and construct system
+- [x] Create first planet (Earth) with a few NPCs and a simple quest
+- [x] Integrate emotional spectrum effects (Fear Parasites as enemies, weak to Hope constructs)
+- [x] Polish mobile UI and touch controls (virtual joystick, action buttons, dialogue box)
+- [x] Prepare for deployment to GitHub Pages
 
-Let's begin Phase 2 by implementing the dialogue system.
+## Phase 3 Goals (Next)
+- [ ] Expand the world with more planets and locations (Qward, Zamaron, etc.)
+- [ ] Add more construct types and emotional spectrum effects (e.g., Hope constructs heal, Rage constructs deal bonus damage)
+- [ ] Implement a proper quest system with journal and quest logs
+- [ ] Add save/load functionality (using localStorage)
+- [ ] Enhance combat with more enemy types (Rage Berserkers, Hope Sirens) and construct effects (shield reduces damage, cage prevents enemy action)
+- [ ] Implement the emotional spectrum alignment system (player's actions affect willpower regeneration and construct effectiveness)
+- [ ] Add day/night cycle or sector threat level
+- [ ] Implement Power Battery items that fully recharge willpower and grant temporary shield
+- [ ] Add Oath recitation at Power Batteries for willpower boost and alignment reset
+- [ ] Polish art and sound (if time permits)
+- [ ] Final testing and optimization for mobile
