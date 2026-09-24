@@ -95,13 +95,14 @@ class SectorMap {
     
     // Handle touch for planet selection
     handleTouch(touchX, touchY) {
-        this.planets.forEach((p, i) => {
+        for (let i = 0; i < this.planets.length; i++) {
+            const p = this.planets[i];
             const dist = Math.hypot(touchX - p.x, touchY - p.y);
             if (dist < 20) {
                 this.selected = i;
                 return p; // return selected planet
             }
-        });
+        }
         return null;
     }
 }
@@ -870,6 +871,11 @@ function init() {
                 const loadingText = document.getElementById('loading-text');
                 if (loadingText) {
                     loadingText.textContent = "Loading game world...";
+                }
+                // Hide the loading screen div
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.style.display = 'none';
                 }
             }
         }, 100);
