@@ -5,13 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Green Lantern: Ultima Odyssey</title>
     <link rel="stylesheet" href="src/css/style.css">
+    <style>
+        #debug-output {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            max-height: 50%;
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 10px;
+            overflow: auto;
+            padding: 5px;
+            display: none;
+            z-index: 1000;
+        }
+    </style>
 </head>
 <body>
     <div id="loading-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #0f0; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: monospace; z-index: 1000;">
         <div>Green Lantern: Ultima Odyssey</div>
         <div id="loading-text">Loading...</div>
     </div>
+    <div id="debug-output"></div>
     <canvas id="gameCanvas" style="display: block; width: 100%; height: 100%;"></canvas>
     <script src="src/js/main.js"></script>
+    <script>
+        // Override console.log to also show in debug output
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const debugOutput = document.getElementById('debug-output');
+            if (debugOutput) {
+                debugOutput.textContent += args.map(arg => 
+                    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+                ).join(' ') + '\n';
+                debugOutput.scrollTop = debugOutput.scrollHeight;
+                debugOutput.style.display = 'block';
+            }
+        };
+        
+        // Override console.error similarly
+        const originalError = console.error;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            const debugOutput = document.getElementById('debug-output');
+            if (debugOutput) {
+                debugOutput.textContent += '[ERROR] ' + args.map(arg => 
+                    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+                ).join(' ') + '\n';
+                debugOutput.scrollTop = debugOutput.scrollHeight;
+                debugOutput.style.display = 'block';
+                debugOutput.style.background = 'rgba(80,0,0,0.8)';
+                debugOutput.style.color = '#f00';
+            }
+        };
+    </script>
 </body>
 </html>

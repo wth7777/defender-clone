@@ -866,6 +866,11 @@ function init() {
             if (gameState.currentState === CONFIG.STATE.BOOT) {
                 gameState.currentState = CONFIG.STATE.SECTOR_MAP;
                 console.log("Switched to SECTOR_MAP");
+                // Update loading text to show progress
+                const loadingText = document.getElementById('loading-text');
+                if (loadingText) {
+                    loadingText.textContent = "Loading game world...";
+                }
             }
         }, 100);
         console.log("Starting game loop");
