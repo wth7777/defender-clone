@@ -56,8 +56,8 @@ A top-down 2D open-world RPG combining the open-world exploration and meaningful
 - Access via pause menu (tap top-right icon).
 
 ### Combat
-- **Real-time with pause** (tap to pause, issue commands, then resume).
-- **Ring Constructs**: Player taps a construct button (e.g., Shield, Sword, Grenade, Cage) and then taps on the target location to create it.
+- **Turn-based** (selected for mobile usability). Player selects an action (construct, item, etc.) and then a target.
+- **Ring Constructs**: Player selects a construct (e.g., Shield, Sword, Grenade, Cage) and then targets a location or enemy to create it.
 - **Willpower Cost**: Each construct costs willpower. If willpower reaches zero, the ring fades and the player is vulnerable until it regenerates (slowly over time or by finding a Power Battery).
 - **Enemy Types**: Emotional manifestations (e.g., Fear Parasites, Rage Berserkers, Hope Sirens) each with weaknesses to certain emotions or construct types.
 
@@ -84,21 +84,21 @@ A top-down 2D open-world RPG combining the open-world exploration and meaningful
 - **Assets**: Use placeholder graphics (colored shapes) for prototype, focusing on mechanics.
 - **Scalability**: Design systems to be data-driven for easy expansion of content.
 
-## Phase 1 Goals
-- [ ] Design document completed (this file)
-- [ ] Project structure set up
-- [ ] Basic game loop with canvas rendering
-- [ ] Sector map with travel between planets (simple tap-to-move on starmap)
-- [ ] Player sprite that can move on a planet tilemap with touch joystick
-- [ ] Basic UI frame (health, willpower, mini-map placeholder)
-- [ ] Placeholder for interaction (tap on NPC to show dialogue box)
+## Phase 1 Goals (Completed)
+- [x] Design document completed (this file)
+- [x] Project structure set up
+- [x] Basic game loop with canvas rendering
+- [x] Sector map with travel between planets (simple tap-to-move on starmap)
+- [x] Player sprite that can move on a planet tilemap with touch joystick
+- [x] Basic UI frame (health, willpower, mini-map placeholder)
+- [x] Placeholder for interaction (tap on NPC to show dialogue box)
 
-## Next Steps (Phase 2)
-- Implement dialogue system with choices
-- Add willpower resource and construct system
-- Create first planet (Earth) with a few NPCs and a simple quest
-- Integrate emotional spectrum effects
-- Polish mobile UI and touch controls
-- Prepare for deployment to GitHub Pages
+## Phase 2 Goals
+- [ ] Implement dialogue system with choices
+- [ ] Add willpower resource and construct system
+- [ ] Create first planet (Earth) with a few NPCs and a simple quest
+- [ ] Integrate emotional spectrum effects
+- [ ] Polish mobile UI and touch controls
+- [ ] Prepare for deployment to GitHub Pages
 
-Let's begin by setting up the project.
+Let's begin Phase 2 by implementing the dialogue system.
