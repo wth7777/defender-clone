@@ -706,7 +706,7 @@ class UI {
 class InputHandler {
     constructor() {
         this.keys = {};
-        this.keyJustPressed = {};
+        this.justPressed = {};
         this.keyPrev = {};
         this.touchStartPos = null;
         this.lastTapPos = null;
@@ -757,10 +757,10 @@ class InputHandler {
     
     beginFrame() {
         // Reset just pressed states
-        this.keyJustPressed = {};
+        this.justPressed = {};
         for (const code in this.keys) {
             if (this.keys[code] && !this.keyPrev[code]) {
-                this.keyJustPressed[code] = true;
+                this.justPressed[code] = true;
             }
         }
         this.keyPrev = { ...this.keys };
@@ -842,7 +842,7 @@ class InputHandler {
     }
     
     isJustPressed(code) {
-        return !!this.keyJustPressed[code];
+        return !!this.justPressed[code];
     }
 }
 
